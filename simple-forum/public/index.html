@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡易掲示板</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .post-form {
+            margin-bottom: 20px;
+        }
+        .posts {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <h1>簡易掲示板</h1>
+
+    <!-- 投稿フォーム -->
+    <div class="post-form">
+        <textarea id="postContent" rows="4" cols="50" placeholder="ここにメッセージを入力してください"></textarea><br>
+        <button onclick="submitPost()">投稿する</button>
+    </div>
+
+    <!-- 投稿の一覧 -->
+    <div id="postsContainer"></div>
+
+    <script>
+        // 投稿を取得して表示する関数
+        async function fetchPosts() {
+            const response = await fetch('/api/posts');
+            const posts = await response.json();
+            const postsContainer = document.getElementById('postsContainer');
+            postsContainer.innerHTML = '';
+            posts.forEach(post => {
+                const postDiv = document.createElement('div');
+                postDiv.className = 'posts';
+                postDiv.innerHTML = `<div>${post.content}</div><div class="timestamp">${new Date(post.createdAt).toLocaleString()}</div>`;
+                postsContainer.appendChild(postDiv);
+            });
+        }
+
+        // 投稿をサーバーに送信する関数
+        async function submitPost() {
+            const content = document.getElementById('postContent').value;
+            if (!content.trim()) {
+                alert("投稿内容を入力してください");
+                return;
+            }
+            const response = await fetch('/api/posts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content })
+            });
+            if (response.ok) {
+                document.getElementById('postContent').value = '';  // フォームをリセット
+                fetchPosts();  // 新しい投稿を取得して表示
+            }
+        }
+
+        // ページロード時に投稿を取得して表示
+        fetchPosts();
+    </script>
+</body>
+</html>
